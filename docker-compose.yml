@@ -1,0 +1,96 @@
+version: '3.5'
+
+################################################################################
+# SERVICES
+################################################################################
+services:
+    # ------------------------------------------------------------
+    # Mysql
+    # ------------------------------------------------------------
+    # mysql:
+    #     image: mysql
+    #     volumes:
+    #         - .mysql:/var/lib/mysql
+    #     environment:
+    #         MYSQL_DATABASE: logistic_db
+    #         MYSQL_USER: admin
+    #         MYSQL_PASSWORD: admin
+    #         MYSQL_ALLOW_EMPTY_PASSWORD: 1
+    #     networks:
+    #         my_network:
+    #             ipv4_address: 170.17.230.06
+
+    # ------------------------------------------------------------
+    # Krankend API Gateway
+    # ------------------------------------------------------------
+    # krakend:
+    #     image: devopsfaith/krakend:1.1-alpine
+    #     container_name: krakend
+    #     ports:
+    #         - '8000:8000'
+    #         - '8090:8090'
+    #     volumes:
+    #         - './krakend.json:/etc/krakend/krakend.json'
+    #     networks:
+    #         my_network:
+    #             ipv4_address: 170.17.230.07
+
+    # ------------------------------------------------------------
+    # Envoy Proxy 
+    # ------------------------------------------------------------
+    envoyproxy:
+        image: envoyproxy/envoy-dev
+        container_name: envoyproxy
+        ports:
+            - '80:10000'
+            - '9901:9901'
+        volumes:
+            - './envoy.yaml:/etc/envoy/envoy.yaml'
+        networks:
+            my_network:
+                ipv4_address: 170.17.230.08
+
+    # ------------------------------------------------------------
+    # Account Sercvice
+    # ------------------------------------------------------------
+    account_service:
+        build:
+            context: ./services/account
+            dockerfile: dockerfiles/dockerfile.local
+        volumes: 
+            - './services/account:/app'
+        ports:
+            - '81:3000'
+        command: bash -c "cp -Rf /go/* ./go && air"
+        networks: 
+            my_network:
+                ipv4_address: 170.17.230.10
+
+    # ------------------------------------------------------------
+    # Logistic Sercvice
+    # ------------------------------------------------------------
+    logistic_service:
+        build:
+            context: ./services/logistic
+            dockerfile: dockerfiles/dockerfile.local
+        volumes: 
+            - './services/logistic:/app'
+        ports:
+            - '82:3000'
+        command: bash -c "cp -Rf /go/* ./go && air"
+        networks: 
+            my_network:
+                ipv4_address: 170.17.230.11
+
+################################################################################
+# NETWORK
+################################################################################
+networks:
+    my_network:
+        driver: bridge
+        driver_opts:
+            com.docker.network.enable_ipv6: 'false'
+        ipam:
+            driver: default
+            config:
+                - subnet: 170.17.230.0/24

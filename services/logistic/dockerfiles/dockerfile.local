@@ -1,0 +1,11 @@
+############################
+# STEP 1 build executable binary
+############################
+FROM golang:latest AS builder
+# Install git.
+# Git is required for fetching the dependencies.
+WORKDIR /app
+COPY . .
+
+RUN curl -fLo /usr/local/bin/air https://git.io/linux_air  \
+    && chmod +x /usr/local/bin/air
